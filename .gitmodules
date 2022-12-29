@@ -1,0 +1,3 @@
+[submodule "Drivers/interfacesHardware"]
+	path = Drivers/interfacesHardware
+	url = https://github.com/chk1990/interfacesHardware.git
