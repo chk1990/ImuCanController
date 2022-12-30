@@ -114,8 +114,11 @@ int main(void)
   MX_SPI1_Init();
   MX_TIM2_Init();
   /* USER CODE BEGIN 2 */
-  Imu.init(&hspi1, SPI1_CS_IMU_GPIO_Port, SPI1_CS_IMU_Pin);
-  HAL_TIM_Base_Start_IT(&htim2);
+  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_SET);
+  //Imu.init(&hspi1, SPI1_CS_IMU_GPIO_Port, SPI1_CS_IMU_Pin);
+  //HAL_TIM_Base_Start_IT(&htim2);
+
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -317,14 +320,17 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(SPI1_CS_IMU_GPIO_Port, SPI1_CS_IMU_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(SPI1_CS_IMU_GPIO_Port, SPI1_CS_IMU_Pin, GPIO_PIN_SET);
 
-  /*Configure GPIO pin : SPI1_CS_IMU_Pin */
-  GPIO_InitStruct.Pin = SPI1_CS_IMU_Pin;
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_RESET);
+
+  /*Configure GPIO pins : SPI1_CS_IMU_Pin PA10 */
+  GPIO_InitStruct.Pin = SPI1_CS_IMU_Pin|GPIO_PIN_10;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(SPI1_CS_IMU_GPIO_Port, &GPIO_InitStruct);
+  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
 }
 
