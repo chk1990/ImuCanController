@@ -1,26 +1,26 @@
 /**
-* @author Christoph Kolhoff
-* @file Lsm9ds1.h
-*/
+ * @author Christoph Kolhoff
+ * @file Lsm9ds1.h
+ */
 
 #ifndef INC_LSM9DS1_H_
 #define INC_LSM9DS1_H_
 
 #include "stm32f1xx_hal.h"
-#include "stm32f1xx_hal_spi.h"
-#include "stm32f1xx_hal_gpio.h"
+#include "stm32f1xx_hal_i2c.h"
 
 class Lsm9ds1 {
 public:
 	Lsm9ds1();
 	virtual ~Lsm9ds1();
 
-        int init(SPI_HandleTypeDef *handle, GPIO_TypeDef *cs_port, uint16_t cs_pin);
+	int8_t init(I2C_HandleTypeDef *handle, uint8_t addrImu, uint8_t addrMag);
+	uint8_t whoAmI(void);
 
 private:
-        SPI_HandleTypeDef *_handleImu = new SPI_HandleTypeDef;
-        GPIO_TypeDef *_cs_port = new GPIO_TypeDef;
-        uint16_t _cs_pin = 0;
+	I2C_HandleTypeDef *_handleImu = new I2C_HandleTypeDef;
+	uint8_t _addrImu = 0xD4; // Address to write to
+	uint8_t _addrMag = 0x38; // Address to write to
 };
 
 #endif /* INC_LSM9DS1_H_ */
