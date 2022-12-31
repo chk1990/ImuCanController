@@ -14,13 +14,13 @@ public:
 	Lsm9ds1();
 	virtual ~Lsm9ds1();
 
-	int8_t init(I2C_HandleTypeDef *handle, uint8_t addrImu, uint8_t addrMag);
+	HAL_StatusTypeDef init(I2C_HandleTypeDef *handle, uint16_t addrImu, uint16_t addrMag);
 	uint8_t whoAmI(void);
 
 private:
 	I2C_HandleTypeDef *_handleImu = new I2C_HandleTypeDef;
-	uint8_t _addrImu = 0xD4; // Address to write to
-	uint8_t _addrMag = 0x38; // Address to write to
+	uint16_t _addrImu = 0xD4; // Address to write to
+	uint16_t _addrMag = 0x38; // Address to write to
 };
 
 #endif /* INC_LSM9DS1_H_ */

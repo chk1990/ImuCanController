@@ -10,7 +10,6 @@
  */
 Lsm9ds1::Lsm9ds1() {
 	//
-
 }
 
 /**
@@ -25,18 +24,16 @@ Lsm9ds1::~Lsm9ds1() {
  * @param[in] handle Handle for I2C interface
  * @param[in] addrImu Address of the IMU - bit 0 = 0
  * @param[in] addrMag Address of the Magnetometer - bit 0 = 0
- * @return -1 on failure; 0 on success
+ * @return HAL status
  */
-int8_t
-Lsm9ds1::init(I2C_HandleTypeDef *handle, uint8_t addrImu, uint8_t addrMag)
+HAL_StatusTypeDef
+Lsm9ds1::init(I2C_HandleTypeDef *handle, uint16_t addrImu, uint16_t addrMag)
 {
-	int8_t ret = -1;
-
 	_handleImu = handle;
+	_addrImu = addrImu;
+	_addrMag = addrMag;
 
-	ret = 0;
-
-	return ret;
+	return HAL_OK;
 }
 
 /**
@@ -47,6 +44,10 @@ uint8_t
 Lsm9ds1::whoAmI(void)
 {
 	uint8_t dataRx = 0;
+
+	//HAL_StatusTypeDef ret = HAL_I2C_Master_Transmit(_handleImu, _addrImu, &dataRx, 1, HAL_MAX_DELAY);
+	//HAL_StatusTypeDef ret = HAL_I2C_Master_Receive(_handleImu, _addrImu, &dataRx, 1, HAL_MAX_DELAY);
+	HAL_I2C_Mem_Read(_handleImu, _addrImu, 0x0F, 1, &dataRx, 1, HAL_MAX_DELAY);
 
 	return dataRx;
 }
