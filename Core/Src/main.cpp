@@ -19,14 +19,13 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 
-#include "Lsm9ds1.h"
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include <stdlib.h>
+#include "Lsm9ds1.h"
 
 // - In timer interrupt callback acquire data
 // - After finishing acquisition transfer data via CAN
-
 
 /* USER CODE END Includes */
 
@@ -37,6 +36,26 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
+#define N_VAL_ACC_X 20
+#define N_VAL_ACC_Y 20
+#define N_VAL_ACC_Z 20
+#define N_VAL_GYR_X 20
+#define N_VAL_GYR_Y 20
+#define N_VAL_GYR_Z 20
+
+#define N_VAL_BUF_IN_ACC_X 20
+#define N_VAL_BUF_IN_ACC_Y 20
+#define N_VAL_BUF_IN_ACC_Z 20
+#define N_VAL_BUF_IN_GYR_X 20
+#define N_VAL_BUF_IN_GYR_Y 20
+#define N_VAL_BUF_IN_GYR_Z 20
+
+#define N_VAL_BUF_OUT_ACC_X 20
+#define N_VAL_BUF_OUT_ACC_Y 20
+#define N_VAL_BUF_OUT_ACC_Z 20
+#define N_VAL_BUF_OUT_GYR_X 20
+#define N_VAL_BUF_OUT_GYR_Y 20
+#define N_VAL_BUF_OUT_GYR_Z 20
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -52,6 +71,29 @@ I2C_HandleTypeDef hi2c1;
 TIM_HandleTypeDef htim2;
 
 /* USER CODE BEGIN PV */
+Lsm9ds1 Imu;
+int16_t *accX; ///< Buffer for acceleration in x-direction
+int16_t *accY; ///< Buffer for acceleration in y-direction
+int16_t *accZ; ///< Buffer for acceleration in z-direction
+int16_t *gyrX; ///< Buffer for angular velocity around x-axis
+int16_t *gyrY; ///< Buffer for angular velocity around y-axis
+int16_t *gyrZ; ///< Buffer for angular velocity around z-axis
+
+float sensAcc = 0.0; ///< Sensitivity of the accelerometer
+float sensGyr = 0.0; ///< Sensitivity of the gyroscope
+
+float *kernelAccXIn;  ///< Elements of the input kernel of the accelerometer in x-direction
+float *kernelAccYIn;  ///< Elements of the input kernel of the accelerometer in y-direction
+float *kernelAccZIn;  ///< Elements of the input kernel of the accelerometer in z-direction
+float *kernelGyrXIn;  ///< Elements of the input kernel of the gyroscope around the x-axis
+float *kernelGyrYIn;  ///< Elements of the input kernel of the gyroscope around the y-axis
+float *kernelGyrZIn;  ///< Elements of the input kernel of the gyroscope around the z-axis
+float *kernelAccXOut; ///< Elements of the output kernel of the accelerometer in x-direction
+float *kernelAccYOut; ///< Elements of the output kernel of the accelerometer in y-direction
+float *kernelAccZOut; ///< Elements of the output kernel of the accelerometer in z-direction
+float *kernelGyrXOut; ///< Elements of the output kernel of the gyroscope around the x-axis
+float *kernelGyrYOut; ///< Elements of the output kernel of the gyroscope around the y-axis
+float *kernelGyrZOut; ///< Elements of the output kernel of the gyroscope around the z-axis
 
 /* USER CODE END PV */
 
@@ -62,7 +104,8 @@ static void MX_CAN_Init(void);
 static void MX_TIM2_Init(void);
 static void MX_I2C1_Init(void);
 /* USER CODE BEGIN PFP */
-Lsm9ds1 Imu;
+void initVars(void);
+void initImu(void);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -121,6 +164,9 @@ int main(void)
 	if(104 == value) {
 		HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_SET);
 	}
+
+	initVars();
+	initImu();
 	/* USER CODE END 2 */
 
 	/* Infinite loop */
@@ -331,6 +377,41 @@ static void MX_GPIO_Init(void)
 
 /* USER CODE BEGIN 4 */
 
+/**
+ * @brief Allocate memory for arrays and populate with values
+ */
+void initVars(void)
+{
+	accX = (int16_t*) calloc(N_VAL_ACC_X, sizeof(int16_t));
+	accY = (int16_t*) calloc(N_VAL_ACC_Y, sizeof(int16_t));
+	accZ = (int16_t*) calloc(N_VAL_ACC_Z, sizeof(int16_t));
+
+	gyrX = (int16_t*) calloc(N_VAL_GYR_X, sizeof(int16_t));
+	gyrY = (int16_t*) calloc(N_VAL_GYR_Y, sizeof(int16_t));
+	gyrZ = (int16_t*) calloc(N_VAL_GYR_Z, sizeof(int16_t));
+
+	kernelAccXIn = (float*) calloc(N_VAL_BUF_IN_ACC_X, sizeof(float));
+	kernelAccYIn = (float*) calloc(N_VAL_BUF_IN_ACC_Y, sizeof(float));
+	kernelAccZIn = (float*) calloc(N_VAL_BUF_IN_ACC_Z, sizeof(float));
+	kernelGyrXIn = (float*) calloc(N_VAL_BUF_IN_GYR_X, sizeof(float));
+	kernelGyrYIn = (float*) calloc(N_VAL_BUF_IN_GYR_Y, sizeof(float));
+	kernelGyrZIn = (float*) calloc(N_VAL_BUF_IN_GYR_Z, sizeof(float));
+
+	kernelAccXOut = (float*) calloc(N_VAL_BUF_OUT_ACC_X, sizeof(float));
+	kernelAccYOut = (float*) calloc(N_VAL_BUF_OUT_ACC_Y, sizeof(float));
+	kernelAccZOut = (float*) calloc(N_VAL_BUF_OUT_ACC_Z, sizeof(float));
+	kernelGyrXOut = (float*) calloc(N_VAL_BUF_OUT_GYR_X, sizeof(float));
+	kernelGyrYOut = (float*) calloc(N_VAL_BUF_OUT_GYR_Y, sizeof(float));
+	kernelGyrZOut = (float*) calloc(N_VAL_BUF_OUT_GYR_Z, sizeof(float));
+}
+
+/**
+ * @brief
+ */
+void initImu(void)
+{
+	//
+}
 /* USER CODE END 4 */
 
 /**
